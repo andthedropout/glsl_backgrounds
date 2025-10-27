@@ -33,10 +33,90 @@ Keep this terminal window open while using the shader wallpaper.
 1. Open Plash
 2. Click the Plash icon in your menu bar
 3. Click "Add Website..."
-4. Enter: `http://localhost:8000/shader.html`
+4. Enter one of these URLs:
+   - `http://localhost:8000/sync.html` (recommended - auto-rotating shaders)
+   - `http://localhost:8000/random.html` (random shader each reload)
+   - `http://localhost:8000/shader.html` (single specific shader)
 5. Click "Add"
 
 Your shader should now be rendering as your desktop background!
+
+**For multiple monitors:** Use multiple Plash instances (download from [GitHub issue](https://github.com/sindresorhus/Plash/issues/2)) and point each to `sync.html` so they stay synchronized.
+
+## Available HTML Files
+
+This project includes three different HTML files for different use cases:
+
+### `shader.html` - Single Static Shader
+
+Point Plash to a specific shader that you configure in the code.
+
+```
+http://localhost:8000/shader.html
+```
+
+Edit the `CURRENT_SHADER` variable in the file to change which shader loads.
+
+### `random.html` - Random Shader on Each Load
+
+Randomly picks a different shader every time the page loads or refreshes.
+
+```
+http://localhost:8000/random.html
+```
+
+Perfect for variety - each reload gives you a different shader!
+
+### `sync.html` - Time-Synchronized Shader (Best for Multiple Monitors)
+
+**Perfect for dual/multi-monitor setups!** All instances of this page show the same shader at the same time, automatically rotating at set intervals.
+
+```
+http://localhost:8000/sync.html
+```
+
+**URL Parameters:**
+
+The page accepts two optional URL parameters to customize behavior:
+
+#### `interval` - Change interval in minutes (default: 60)
+
+How often the shader changes. Specified in minutes.
+
+**Examples:**
+- `http://localhost:8000/sync.html?interval=30` - Change every 30 minutes
+- `http://localhost:8000/sync.html?interval=120` - Change every 2 hours
+- `http://localhost:8000/sync.html?interval=15` - Change every 15 minutes
+
+#### `mode` - Selection mode (default: random)
+
+How shaders are selected.
+
+- `random` - Randomly select shader (but synchronized across all instances)
+- `sequential` - Cycle through all shaders in order
+
+**Examples:**
+- `http://localhost:8000/sync.html?mode=sequential` - Cycle through shaders in order every hour
+- `http://localhost:8000/sync.html?mode=random` - Random shader every hour (default)
+
+#### Combining Parameters
+
+You can combine both parameters using `&`:
+
+```
+http://localhost:8000/sync.html?interval=30&mode=sequential
+```
+
+This will cycle through shaders in order, changing every 30 minutes.
+
+**Why use sync.html for multiple monitors?**
+
+When you have multiple Plash instances running (one per monitor), `random.html` would show different shaders on each screen. With `sync.html`, both monitors:
+- Show the **same shader** at the same time
+- Change to the **same new shader** at the same time
+- Stay **synchronized** as long as they're viewing the same URL
+
+The page automatically reloads itself at the next interval boundary, so you don't need to configure Plash's reload setting.
 
 ## Customizing Your Shader
 
@@ -144,7 +224,14 @@ To stop the server, press `Ctrl+C` in the Terminal window.
 
 ```
 glsl_desktop/
-├── shader.html     # Main file - edit your shader code here
+├── shader.html     # Single static shader (configurable in code)
+├── random.html     # Random shader on each load
+├── sync.html       # Time-synchronized shader (great for multi-monitor)
+├── shaders/        # Directory containing all GLSL shader files
+│   ├── default.glsl
+│   ├── hexagon_x5.glsl
+│   ├── subversion.glsl
+│   └── ... (25+ shaders)
 └── README.md       # This file
 ```
 
