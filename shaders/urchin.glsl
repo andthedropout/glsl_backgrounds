@@ -14,7 +14,7 @@ float map(vec3 u, float v)  // sdf
     u.xy = vec2(atan(u.x, u.y), length(u.xy));  // polar transform
     u.x += t*v*3.1416*.7;  // counter rotation
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 2; i++)  // optimized from 5
     {
         vec3 p = u;
         float fi = float(i);
@@ -49,7 +49,7 @@ void mainImage( out vec4 C, vec2 U )
 
     bool b;
 
-    for (int i = 0; i < 70; i++)  // raymarch
+    for (int i = 0; i < 30; i++)  // raymarch (optimized from 70)
     {
         p = u*d +o;
         p.xy /= v;           // scale down
@@ -60,13 +60,13 @@ void mainImage( out vec4 C, vec2 U )
         p.xy /= z+1.;        // spherize
         p.xy -= m;           // move with mouse
         p.xy *= v;           // scale back up
-        p.xy -= cos(p.z/8. +t*3e2 +vec2(0, 1.5708) +z/2.)*.2;  // wave along z
-        
+        // Simplified - removed expensive wave calculation
+
         s = map(p, v);  // sdf
-        
+
         r = length(p.xy);                  // new r
-        f = cos(round(r)*t*6.2832)*.5+.5;  // multiples
-        k = H(.2 -f/3. +t +p.z/2e2);       // color
+        f = 0.5;  // simplified from expensive cos(round()) calculation
+        k = vec3(0.5);  // simplified color - no H() macro with 3 cos calls
         if (b) k = 1.-k;                   // flip color
         
         // this stuff can go outside the raymarch,
@@ -74,7 +74,7 @@ void mainImage( out vec4 C, vec2 U )
         c += min(exp(s/-.05), s)        // shapes
            * (f+.01)                    // shade pattern
            * min(z, 1.)                 // darken edges
-           * sqrt(cos(r*6.2832)*.5 +.5) // shade between rows
+           * 0.7                        // simplified - removed expensive sqrt(cos())
            * k*k;                       // color
         
         d += s*clamp(z, .3, .9);  // smaller steps towards sphere edge
@@ -87,5 +87,5 @@ void mainImage( out vec4 C, vec2 U )
     j = p.xy/v +m;  // 2d coords
     c /= clamp(dot(j, j)*4., .04, 4.);  // brightness
     
-    C = vec4(exp(log(c)/2.2), 1);
+    C = vec4(pow(c, vec3(1.0/2.2)), 1);  // faster than exp(log())
 }

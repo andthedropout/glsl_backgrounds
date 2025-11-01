@@ -18,7 +18,7 @@ float map(vec3 u)
     u.x += t/6.;                                // counter rotation
     
     vec3 p;
-    for (int ii = 0; ii < 5; ii++)
+    for (int ii = 0; ii < 3; ii++)  // optimized from 5
     {
         i = float(ii);
         p = u;
@@ -28,7 +28,7 @@ float map(vec3 u)
         p.x -= round(p.x/6.2832)*6.2832;  // segment x
         p.y -= y;                         // move y
         p.z += sqrt(y/w)*w;               // curve inner z down
-        z = cos(y*t/50.)*.5+.5;           // radial wave
+        z = 0.5;                          // simplified - removed expensive cos()
         p.z += z*2.;                      // wave z
         p = abs(p);
         f = min(f, max(p.x, max(p.y, p.z)) - s*z);  // cubes
@@ -55,7 +55,7 @@ void mainImage( out vec4 C, in vec2 U )
          h = A(x);  // yaw
 
     i = 0.;
-    for (int ii = 0; ii < 50; ii++)  // raymarch
+    for (int ii = 0; ii < 30; ii++)  // raymarch (optimized from 50)
     {
         i = float(ii);
         p = u*d + o;
@@ -63,13 +63,13 @@ void mainImage( out vec4 C, in vec2 U )
         p.xz *= h;
         
         s = map(p);
-        r = (cos(round(length(p.xz))*T/50.)*.7 - 1.8)/2.;  // color gradient
+        r = 0.5;  // simplified - removed expensive cos(round(length()))
         c += min(s, exp(-s/.07))  // black & white
-           * H(r+.5) * (r+2.4);      // color
+           * vec3(0.6, 0.4, 0.8) * 1.0;  // simplified color - removed H() macro
         
         if (s < 1e-3 || d > 1e3) break;
         d += s*.7;
     }
     
-    C = vec4(exp(log(c)/2.2), 1);
+    C = vec4(pow(c, vec3(1.0/2.2)), 1);  // faster than exp(log())
 }

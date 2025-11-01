@@ -6,8 +6,8 @@
 #define DRAG_MULT 0.38 // changes how much waves pull on the water
 #define WATER_DEPTH 1.0 // how deep is the water
 #define CAMERA_HEIGHT 1.5 // how high the camera should be
-#define ITERATIONS_RAYMARCH 12 // waves iterations of raymarching
-#define ITERATIONS_NORMAL 36 // waves iterations when calculating normals
+#define ITERATIONS_RAYMARCH 4 // waves iterations of raymarching (optimized from 12)
+#define ITERATIONS_NORMAL 8 // waves iterations when calculating normals (optimized from 36)
 
 #define NormalizedMouse (iMouse.xy / iResolution.xy) // normalize mouse coords
 
@@ -29,7 +29,7 @@ float getwaves(vec2 position, int iterations) {
   float weight = 1.0;// weight in final sum for the wave, this will change every iteration
   float sumOfValues = 0.0; // will store final sum of values
   float sumOfWeights = 0.0; // will store final sum of weights
-  for(int i=0; i < 64; i++) {
+  for(int i=0; i < 32; i++) {
     if(i >= iterations) break;
     // generate some wave direction that looks kind of random
     vec2 p = vec2(sin(iter), cos(iter));
@@ -60,7 +60,7 @@ float getwaves(vec2 position, int iterations) {
 float raymarchwater(vec3 camera, vec3 start, vec3 end, float depth) {
   vec3 pos = start;
   vec3 dir = normalize(end - start);
-  for(int i=0; i < 64; i++) {
+  for(int i=0; i < 12; i++) {
     // the height is from 0 to -depth
     float height = getwaves(pos.xz, ITERATIONS_RAYMARCH) * depth - depth;
     // if the waves height almost nearly matches the ray height, assume its a hit and return the hit distance
@@ -136,7 +136,7 @@ vec3 extra_cheap_atmosphere(vec3 raydir, vec3 sundir) {
 
 // Calculate where the sun should be, it will be moving around the sky
 vec3 getSunDirection() {
-  return normalize(vec3(-0.0773502691896258 , 0.5 + sin(iTime * 0.2 + 2.6) * 0.45 , 0.5773502691896258));
+  return normalize(vec3(-0.0773502691896258 , 0.15 + sin(iTime * 0.1 + 2.6) * 0.1 , 0.5773502691896258));
 }
 
 // Get atmosphere color for given direction
@@ -197,7 +197,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec3 waterHitPos = origin + ray * dist;
 
   // calculate normal at the hit position
-  vec3 N = normal(waterHitPos.xz, 0.01, WATER_DEPTH);
+  vec3 N = normal(waterHitPos.xz, 0.02, WATER_DEPTH);
 
   // smooth the normal with distance to avoid disturbing high frequency noise
   N = mix(N, vec3(0.0, 1.0, 0.0), 0.8 * min(1.0, sqrt(dist*0.01) * 1.1));

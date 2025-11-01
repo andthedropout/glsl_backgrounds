@@ -58,19 +58,15 @@ float hash(vec2 uv){
     #endif
     return (a>0.?
         a*pow1d5(
-        //texture(iChannel0,uv/iChannelResolution[0].xy).r
         hash21(uv)
         )*w
-        :0.)-(textureMirror(iChannel0,vec2((uv.x*29.+uv.y)*.03125,1.)).x)*audio_vibration_amplitude;
+        :0.);
 }
 
 float edgeMin(float dx,vec2 da, vec2 db,vec2 uv){
-    uv.x+=5.;
-    vec3 c = fract((round(vec3(uv,uv.x+uv.y)))*(vec3(0,1,2)+0.61803398875));
-    float a1 = textureMirror(iChannel0,vec2(c.y,0.)).x>.6?.15:1.;
-    float a2 = textureMirror(iChannel0,vec2(c.x,0.)).x>.6?.15:1.;
-    float a3 = textureMirror(iChannel0,vec2(c.z,0.)).x>.6?.15:1.;
-
+    float a1 = 1.;
+    float a2 = 1.;
+    float a3 = 1.;
     return min(min((1.-dx)*db.y*a3,da.x*a2),da.y*a1);
 }
 
@@ -104,7 +100,7 @@ vec2 map(vec3 p){
 }
 
 vec3 grad(vec3 p){
-    const vec2 e = vec2(.005,0);
+    const vec2 e = vec2(.01,0);
     float a =map(p).x;
     return vec3(map(p+e.xyy).x-a
                 ,map(p+e.yxy).x-a
@@ -113,7 +109,7 @@ vec3 grad(vec3 p){
 
 vec2 intersect(vec3 ro,vec3 rd){
     float d =0.,h=0.;
-    for(int i = 0;i<500;i++){ //look nice with 50 iterations
+    for(int i = 0;i<150;i++){ //optimized from 500 to 150 iterations
         vec3 p = ro+d*rd;
         vec2 s = map(p);
         h = s.x;
@@ -146,7 +142,7 @@ void addsun(vec3 rd,vec3 ld,inout vec3 col){
 float starnoise(vec3 rd){
     float c = 0.;
     vec3 p = normalize(rd)*300.;
-	for (float i=0.;i<4.;i++)
+	for (float i=0.;i<2.;i++)
     {
         vec3 q = fract(p)-.5;
         vec3 id = floor(p);
@@ -165,12 +161,8 @@ vec3 gsky(vec3 rd,vec3 ld,bool mask){
     float haze = exp2(-5.*(abs(rd.y)-.2*dot(rd,ld)));
     
 
-    //float st = mask?pow512(texture(iChannel0,(rd.xy+vec2(300.1,100)*rd.z)*10.).r)*(1.-min(haze,1.)):0.;
-    //float st = mask?pow512(hash21((rd.xy+vec2(300.1,100)*rd.z)*10.))*(1.-min(haze,1.)):0.;
     float st = mask?(starnoise(rd))*(1.-min(haze,1.)):0.;
-    vec3 back = vec3(.4,.1,.7)*(1.-.5*textureMirror(iChannel0,vec2(.5+.05*rd.x/rd.y,0.)).x
-    *exp2(-.1*abs(length(rd.xz)/rd.y))
-    *max(sign(rd.y),0.));
+    vec3 back = vec3(.4,.1,.7);
     #ifdef city
     float x = round(rd.x*30.);
     float h = hash21(vec2(x-166.));

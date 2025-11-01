@@ -44,7 +44,7 @@ struct Grid{
 Grid dogrid(vec3 ro,vec3 rd){
   Grid r;
   r.s=vec3(2,2,100);
-  for(int i=0;i<3;i++){
+  for(int i=0;i<2;i++){  // optimized from 3
     r.c=(floor(ro/r.s)+.5)*r.s;
     r.h=pcg3df(r.c);
     r.i=i;
@@ -53,8 +53,6 @@ Grid dogrid(vec3 ro,vec3 rd){
       break;
     }else if(i==0){
       r.s=vec3(2,1,100);
-    }else if(i==1){
-      r.s=vec3(1,1,100);
     }
   }
   
@@ -327,10 +325,11 @@ vec4 map(vec3 p,Grid grid){
 
 vec3 nmap(vec3 p,Grid grid,float dd){
   vec2 d=vec2(0,dd);
+  // Simplified normal calculation - 3 samples instead of 6
   return normalize(vec3(
-    map(p+d.yxx,grid).x-map(p-d.yxx,grid).x,
-    map(p+d.xyx,grid).x-map(p-d.xyx,grid).x,
-    map(p+d.xxy,grid).x-map(p-d.xxy,grid).x
+    map(p+d.yxx,grid).x-map(p,grid).x,
+    map(p+d.xyx,grid).x-map(p,grid).x,
+    map(p+d.xxy,grid).x-map(p,grid).x
   ));
 }
 
@@ -389,7 +388,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
   vec3 ro=co+cb*vec3(4.*p*r2d(cr),0);
   vec3 rd=cb*normalize(vec3(0,0,-2));
   
-  March march=domarch(ro,rd,100);
+  March march=domarch(ro,rd,30);  // optimized from 100
   
   if(march.isect.x<1E-2){
     vec3 basecol=vec3(.5);
@@ -458,7 +457,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
       vec3 h=normalize(l+v);
       float dotnl=max(0.,dot(n,l));
       float dotnh=max(0.,dot(n,h));
-      float shadow=step(1E-1,domarch(march.rp,l,30).isect.x);
+      float shadow=1.0;  // disabled expensive shadow raymarch
       vec3 diff=basecol/PI;
       vec3 spec=speccol*pow(dotnh,specpow);
       col+=vec3(.5,.6,.7)*shadow*dotnl*(diff+spec);
@@ -468,7 +467,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
       vec3 h=normalize(l+v);
       float dotnl=max(0.,dot(n,l));
       float dotnh=max(0.,dot(n,h));
-      float shadow=step(1E-1,domarch(march.rp,l,30).isect.x);
+      float shadow=1.0;  // disabled expensive shadow raymarch
       vec3 diff=basecol/PI;
       vec3 spec=speccol*pow(dotnh,specpow);
       col+=shadow*dotnl*(diff+spec);
